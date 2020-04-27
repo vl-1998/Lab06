@@ -11,10 +11,10 @@ public class TestModel {
 		
 		//System.out.println(m.getUmiditaMedia(12));
 		
-		System.out.println(m.trovaSequenza(5));
-		System.out.println(m.calcolaCosto(m.trovaSequenza(5)));
-		
-		
+		for (int i=1; i<=12 ; i++) {
+		System.out.println(m.trovaSequenza(i));
+		System.out.println(m.calcolaCosto(m.trovaSequenza(i)));	
+		}
 		
 
 	}

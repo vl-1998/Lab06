@@ -9,6 +9,7 @@ public class Model {
 	private MeteoDAO dao;
 	public List <Citta> soluzione;
 	private int bestCosto = 0;
+	private List <Citta> citta;
 	
 	
 	private final static int COST = 100;
@@ -29,13 +30,15 @@ public class Model {
 		return medie;
 	}
 	
+	
+	
 	// of course you can change the String output with what you think works best
 	public List<Citta> trovaSequenza(int mese) {
 		 Citta Torino = new Citta ("Torino", dao.getAllRilevamentiLocalitaMese(mese, "Torino"));
 		 Citta Milano = new Citta ("Milano", dao.getAllRilevamentiLocalitaMese(mese, "Milano"));
 		 Citta Genova = new Citta ("Genova", dao.getAllRilevamentiLocalitaMese(mese, "Genova"));
 		 
-		 List <Citta> citta = new ArrayList <>();
+		 citta = new ArrayList <>();
 		 citta.add(Genova);
 		 citta.add(Milano);
 		 citta.add(Torino);
@@ -44,12 +47,12 @@ public class Model {
 		 soluzione = new ArrayList <>();
 		 List <Citta> parziale = new ArrayList <>();
 		 
-		 cerca(parziale, 0, citta);
+		 cerca(parziale, 0);
 		
 		return soluzione;
 	}
 	
-	private void cerca(List <Citta> parziale, int livello, List <Citta> citta) {
+	private void cerca(List <Citta> parziale, int livello) {
 		
 		//caso terminale 
 		if (parziale.size()==NUMERO_GIORNI_TOTALI) {
@@ -66,25 +69,60 @@ public class Model {
 		else {
 		//caso intermedio 
 		for (int i=0; i<citta.size(); i++) {
+			
+			
+			if (controlloMinimo(citta.get(i), parziale)) {
+			
 			int flag=0;
+			
 			Citta c = citta.get(i);
+			
 			if (c.getCounter()>=NUMERO_GIORNI_CITTA_MAX) {
-				flag=1;
+				flag=1; //non faccio la ricorsione e devo cambiare citta
 			}
 			
 			if (flag==0) {
-				citta.get(i).increaseCounter();
-				parziale.add(c);
-				cerca (parziale, livello+1, citta);
-				parziale.remove(c);
-				citta.get(i).setCounter(c.getCounter()-1);
+					citta.get(i).increaseCounter();
+					parziale.add(c);
+					cerca (parziale, livello+1);
+					parziale.remove(c);
+					citta.get(i).setCounter(c.getCounter()-1);
+				}
+				
 			}
 				
 			}
 		}
 	}
+	
+	
+	public boolean controlloMinimo (Citta citta, List <Citta> parziale) {
 		
-			
+		// verifica dei giorni minimi
+				if (parziale.size()==0) //primo giorno posso inserire qualsiasi città
+						return true;
+				
+				if (parziale.size() < NUMERO_GIORNI_CITTA_CONSECUTIVI_MIN && parziale.size()!=0) {//(parziale.size()==1 || parziale.size()==2) {
+					//siamo al secondo o terzo giorno, non posso cambiare
+					//quindi l'aggiunta è valida solo se la città di prova coincide con la sua precedente
+					return parziale.get(parziale.size()-1).equals(citta); 
+				}
+				
+				//nel caso generale, se ho già passato i controlli sopra, non c'è nulla che mi vieta di rimanere nella stessa città
+				//quindi per i giorni successivi ai primi tre posso sempre rimanere
+				if (parziale.get(parziale.size()-1).equals(citta))
+					return true; 
+				
+				// se cambio città mi devo assicurare che nei giorni precedenti sono rimasto fermo 
+				for(int i=1; i <= NUMERO_GIORNI_CITTA_CONSECUTIVI_MIN; i++) {
+					if (parziale.get(parziale.size()-1).equals(parziale.get(parziale.size()-i))) {
+						return true;
+					}
+				}
+					
+				return false;
+		
+	}
 	
 	
 	public int calcolaCosto (List <Citta> sequenza) {
